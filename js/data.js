@@ -48,7 +48,7 @@ export async function loadWorkbook(isAdmin, setStatusCallback, callback) {
         let serverVersion = null;
 
         try {
-            if (JSONBIN_BIN_ID === "699932fe43b1c97be9901df9") {
+            if (JSONBIN_BIN_ID === "YOUR_BIN_ID_HERE") {
                 console.warn("JSONBin not configured. Bypassing fast version check.");
             } else {
                 const ts = new Date().getTime();
@@ -435,7 +435,7 @@ export async function adminForceUpdate(setStatusCallback) {
     try {
         const { GOOGLE_SCRIPT_URL, JSONBIN_BIN_ID, JSONBIN_API_KEY } = await import('./config.js');
 
-        if (JSONBIN_BIN_ID === "699932fe43b1c97be9901df9") {
+        if (JSONBIN_BIN_ID === "YOUR_BIN_ID_HERE") {
             throw new Error("JSONBin is not configured in config.js");
         }
 
