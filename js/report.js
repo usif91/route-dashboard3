@@ -145,6 +145,10 @@ tbody.addEventListener("click", (e) => {
     const tr = e.target.closest("tr.data-row");
     if (!tr) return;
 
+    // Prevent any buttons or links inside the table from firing (like Google Maps links or Copy buttons)
+    e.preventDefault();
+    e.stopPropagation();
+
     // Get intersection data off the row
     const jsonStr = tr.getAttribute("data-json");
     if (!jsonStr) return;
