@@ -394,3 +394,22 @@ export function searchNearMe(setStatusCallback, renderCallback) {
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
 }
+
+export async function adminForceUpdate(setStatusCallback) {
+    if (setStatusCallback) setStatusCallback("muted", `Publishing update to clients… <span class="spinner"></span>`);
+    try {
+        const { GOOGLE_SCRIPT_URL } = await import('./config.js');
+        const resp = await fetch(`${GOOGLE_SCRIPT_URL}?action=forceUpdateVersion`, { method: 'POST' });
+
+        if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+
+        // Also clear local cache so the admin fetches fresh data on next reload just in case
+        localStorage.removeItem('routeDashboardData');
+        localStorage.removeItem('routeDashboardVersion');
+
+        if (setStatusCallback) setStatusCallback("ok", `Update published. Clients will refresh their data on next load.`);
+    } catch (err) {
+        if (setStatusCallback) setStatusCallback("error", `Failed to publish update: ${err.message}`);
+        console.error("Force update failed:", err);
+    }
+}

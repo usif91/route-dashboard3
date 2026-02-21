@@ -308,6 +308,8 @@
                 <button class="refresh-btn" onclick="showIntersections()"
                     style="background:rgba(124, 159, 255, 0.2); border:1px solid var(--accent);">Manage
                     Intersections</button>
+                <button class="refresh-btn" onclick="publishUpdates()"
+                    style="background:var(--ok); border:none; color:black;">Publish Updates</button>
             </div>
             <button class="refresh-btn" onclick="loadMore()" id="loadMoreBtn"
                 style="display:none; margin-top:10px; background:rgba(124, 159, 255, 0.2); border:1px solid var(--accent);">Load
@@ -472,7 +474,7 @@
 
     <script type="module">
         import { GOOGLE_SCRIPT_URL } from '../js/config.js';
-        import { state, loadWorkbook, computeMatches } from '../js/data.js';
+        import { state, loadWorkbook, computeMatches, adminForceUpdate } from '../js/data.js';
 
         const $ = (id) => document.getElementById(id);
 
@@ -503,6 +505,16 @@
             if (state.DATA.length === 0) {
                 await loadIntersections();
             }
+        }
+
+        window.publishUpdates = async function () {
+            await adminForceUpdate((kind, msg) => {
+                let color = "var(--muted)";
+                if (kind === "error") color = "var(--danger)";
+                if (kind === "ok") color = "var(--ok)";
+                $("status").innerHTML = `<span style="color:${color}">${msg}</span>`;
+            });
+            setTimeout(() => $("status").innerHTML = "", 5000);
         }
 
         async function loadIntersections() {

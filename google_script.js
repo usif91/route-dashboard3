@@ -76,6 +76,11 @@ function doPost(e) {
         return updateData(data);
     }
 
+    if (action === "forceUpdateVersion") {
+        PropertiesService.getScriptProperties().setProperty("dataVersion", new Date().getTime().toString());
+        return ContentService.createTextOutput("Version updated").setMimeType(ContentService.MimeType.TEXT);
+    }
+
     return ContentService.createTextOutput("Unknown action").setMimeType(ContentService.MimeType.TEXT);
 }
 
@@ -293,9 +298,4 @@ function updateSheet2(ss, route, planKey, value) {
             return;
         }
     }
-}
-
-// --- CHECKSUM VERSIONING ---
-function onEdit(e) {
-    PropertiesService.getScriptProperties().setProperty("dataVersion", new Date().getTime().toString());
 }
