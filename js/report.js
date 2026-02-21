@@ -172,6 +172,13 @@ formProblemType.addEventListener("change", (e) => {
     otherDetails.style.display = (val === "Other") ? "block" : "none";
 });
 
+document.getElementById("reportLightColor").addEventListener("change", (e) => {
+    const sizeContainer = document.getElementById("lightSizeContainer");
+    if (sizeContainer) {
+        sizeContainer.style.display = (e.target.value === "Pedestrian") ? "none" : "block";
+    }
+});
+
 btnCancelForm.addEventListener("click", () => {
     formCard.style.display = "none";
     searchCard.style.display = "block";
@@ -180,6 +187,8 @@ btnCancelForm.addEventListener("click", () => {
     lightDetails.style.display = "none";
     document.getElementById("reportLightColor").value = "";
     document.getElementById("reportLightSize").value = "";
+    const sizeContainer = document.getElementById("lightSizeContainer");
+    if (sizeContainer) sizeContainer.style.display = "block";
     otherDetails.style.display = "none";
     document.getElementById("reportOtherDesc").value = "";
     document.getElementById("reportLocationNotes").value = "";
@@ -197,11 +206,14 @@ btnSubmitReport.addEventListener("click", async () => {
     if (type === "Light Out") {
         const c = document.getElementById("reportLightColor").value;
         const s = document.getElementById("reportLightSize").value;
-        if (!c || !s) {
-            alert("Please select Color and Size for the light out.");
+        if (!c) {
+            alert("Please select a Color for the light out.");
             return;
         }
-        details = `${c} - ${s}`;
+        details = c;
+        if (c !== "Pedestrian" && s) {
+            details += ` - ${s}`;
+        }
     } else {
         details = document.getElementById("reportOtherDesc").value;
         if (!details.trim()) {
