@@ -48,7 +48,7 @@ export async function loadWorkbook(isAdmin, setStatusCallback, callback) {
         let serverVersion = null;
 
         try {
-            if (JSONBIN_BIN_ID === "YOUR_BIN_ID_HERE") {
+            if (JSONBIN_BIN_ID === "Y699932fe43b1c97be9901df9") {
                 console.warn("JSONBin not configured. Bypassing fast version check.");
             } else {
                 const ts = new Date().getTime();
