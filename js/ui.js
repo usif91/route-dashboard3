@@ -86,6 +86,8 @@ export function renderRows(rows, append = false) {
 
     const tr = document.createElement("tr");
     tr.className = zebraClass;
+    tr.classList.add("data-row");
+    tr.setAttribute("data-json", JSON.stringify(r));
     tr.innerHTML = `<td>${routeCell}</td><td>${yardCell}</td><td>${streetCell}</td>`;
     tbody.appendChild(tr);
 
