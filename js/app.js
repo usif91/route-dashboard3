@@ -161,7 +161,7 @@ $("btnNear").addEventListener("click", () => {
 $("tbody").addEventListener("click", handleTableClick);
 
 // Init
-loadWorkbook(null, setStatus, () => {
+loadWorkbook(false, setStatus, () => {
     updateCounts();
     updateCarHeader(); // Dynamic header text
     computeMatches();

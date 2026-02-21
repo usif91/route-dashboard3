@@ -519,7 +519,7 @@
 
         async function loadIntersections() {
             const status = $("intersectionStatus");
-            await loadWorkbook('FULL_MIGRATION', (kind, msg) => {
+            await loadWorkbook(true, (kind, msg) => {
                 let color = "var(--muted)";
                 if (kind === "error") color = "var(--danger)";
                 if (kind === "ok") color = "var(--success)";

@@ -37,8 +37,56 @@ function safeDecode(s) {
 }
 
 // Loading from Google Sheets now
-export async function loadWorkbook(urlIgnored, setStatusCallback, callback) {
-    if (setStatusCallback) setStatusCallback("muted", `Checking for updates… <span class="spinner"></span>`);
+export async function loadWorkbook(isAdmin, setStatusCallback, callback) {
+    if (setStatusCallback) setStatusCallback("muted", `Loading data… <span class="spinner"></span>`);
+
+    // Broadcast Channel for cross-tab sync
+    const channel = new BroadcastChannel('route_dashboard_updates');
+
+    if (!isAdmin) {
+        // HOMEPAGE / DISPATCH: Pure Local Storage + Broadcast Listen
+        const cachedData = localStorage.getItem('routeDashboardData');
+
+        if (cachedData) {
+            try {
+                const json = JSON.parse(cachedData);
+                processSheets(json);
+                if (setStatusCallback) setStatusCallback("ok", `Loaded ${state.DATA.length.toLocaleString()} rows from cache.`);
+            } catch (e) {
+                console.warn("Failed to parse cached data", e);
+                if (setStatusCallback) setStatusCallback("error", `Cache corrupted. Waiting for Admin update.`);
+            }
+        } else {
+            if (setStatusCallback) setStatusCallback("error", `No data found. Please ask an Admin to publish updates.`);
+            state.DATA = [];
+        }
+
+        if (callback) callback();
+
+        // Listen for admin publishes
+        channel.onmessage = (event) => {
+            if (event.data === 'update_available') {
+                console.log("Update received from Admin tab!");
+                const newData = localStorage.getItem('routeDashboardData');
+                if (newData) {
+                    try {
+                        const json = JSON.parse(newData);
+                        processSheets(json);
+                        if (setStatusCallback) {
+                            setStatusCallback("ok", `Updated to latest data (${state.DATA.length.toLocaleString()} rows).`);
+                            setTimeout(() => setStatusCallback("", ""), 3000);
+                        }
+                        if (callback) callback(); // re-render UI
+                    } catch (e) {
+                        console.error("Failed to parse newly broadcasted data", e);
+                    }
+                }
+            }
+        };
+        return;
+    }
+
+    // ADMIN PANEL: Full Sync + Broadcast Sender
     try {
         const { GOOGLE_SCRIPT_URL } = await import('./config.js');
 
@@ -75,6 +123,8 @@ export async function loadWorkbook(urlIgnored, setStatusCallback, callback) {
                     localStorage.setItem('routeDashboardVersion', serverVersion);
                 }
                 localStorage.setItem('routeDashboardData', JSON.stringify(json));
+                // We fetched new data, tell other tabs
+                channel.postMessage('update_available');
             } catch (e) {
                 console.warn("Could not save to localStorage (quota exceeded?)", e);
             }
