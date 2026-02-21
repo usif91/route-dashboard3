@@ -9,6 +9,10 @@ function doGet(e) {
         return getNicknames();
     }
 
+    if (action === "getReports") {
+        return getReports();
+    }
+
     if (action === "getLogs") {
         return getLogs();
     }
@@ -68,6 +72,14 @@ function doPost(e) {
 
     const action = e.parameter.action || data.action;
 
+    if (action === "submitReport") {
+        return submitReport(data);
+    }
+
+    if (action === "resolveReport") {
+        return resolveReport(data);
+    }
+
     if (action === "log") {
         return logSearch(data);
     }
@@ -125,26 +137,121 @@ function getLogs() {
 }
 
 function logSearch(data) {
+    // Requires a sheet named "logs"
+    // Columns: [Timestamp, IP/DeviceID (if tracked), Query, Matches, UserLat, UserLon, TopResult, ExecutionTimeInMs, AppVersion]
     let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("logs");
     if (!sheet) {
         sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("logs");
-        // Add headers if new
-        sheet.appendRow(["Timestamp", "Source", "User", "Query", "Top Result", "Intersection", "Location", "6 Car"]);
+        sheet.appendRow(["Timestamp", "DeviceID", "Query", "AppVersion", "QueryTimeMs", "TopResult", "Lat", "Lon"]);
     }
 
-    const timestamp = new Date().toISOString();
+    const timestamp = new Date();
+    const isNearMe = data.query === "Search Near Me";
+
+    // Flatten properties to append to row
     sheet.appendRow([
         timestamp,
-        data.source || "Client",
-        data.user,
-        data.query,
-        data.topResultSummary,
-        data.intersection,
-        data.location,
-        data.sixCar
+        data.deviceId || "Unknown",
+        data.query || "",
+        data.appVersion || "2.1",
+        data.clientQueryTimeMs || 0,
+        data.topResult || "",
+        data.location ? (data.location.lat + "," + data.location.lon) : "",
+        data.intersection || ""
     ]);
 
-    return ContentService.createTextOutput("Logged").setMimeType(ContentService.MimeType.TEXT);
+    return ContentService.createTextOutput("Log recorded").setMimeType(ContentService.MimeType.TEXT);
+}
+
+// --- NEW REPORTING LOGIC ---
+
+function submitReport(data) {
+    // Requires a sheet named "Reports"
+    // Columns: [Timestamp, Status, Route, Intersection, Lat, Lon, ProblemType, Details, LocationNotes, AdditionalNotes, DeviceID]
+    let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Reports");
+    if (!sheet) {
+        sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Reports");
+        sheet.appendRow(["Timestamp", "Status", "Route", "Intersection", "Lat", "Lon", "ProblemType", "Details", "LocationNotes", "AdditionalNotes", "DeviceID"]);
+    }
+
+    const timestamp = new Date();
+    sheet.appendRow([
+        timestamp,
+        "Open",
+        data.route || "",
+        data.intersection || "",
+        data.lat || "",
+        data.lon || "",
+        data.problemType || "",
+        data.details || "",
+        data.locationNotes || "",
+        data.additionalNotes || "",
+        data.deviceId || "Unknown"
+    ]);
+
+    return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Report submitted" })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getReports() {
+    let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Reports");
+    if (!sheet) {
+        return ContentService.createTextOutput("[]").setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+        return ContentService.createTextOutput("[]").setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const headers = data[0];
+    const results = [];
+
+    for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        const statusIndex = headers.indexOf("Status");
+
+        // Only return Open reports
+        if (statusIndex !== -1 && row[statusIndex] !== "Open") {
+            continue;
+        }
+
+        const obj = {};
+        for (let j = 0; j < headers.length; j++) {
+            let val = row[j];
+            // Format dates nicely
+            if (val instanceof Date) {
+                val = val.toLocaleString();
+            }
+            obj[headers[j]] = val;
+        }
+        // Save the row index so clients can target it for resolution
+        obj._rowIndex = i + 1;
+        results.push(obj);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify(results)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function resolveReport(data) {
+    const rowIndex = parseInt(data.rowIndex, 10);
+    if (!rowIndex || isNaN(rowIndex)) {
+        return ContentService.createTextOutput(JSON.stringify({ success: false, message: "Invalid row index" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    let sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Reports");
+    if (!sheet) {
+        return ContentService.createTextOutput(JSON.stringify({ success: false, message: "Reports sheet not found" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const statusColIndex = headers.indexOf("Status") + 1; // 1-indexed
+
+    if (statusColIndex > 0) {
+        sheet.getRange(rowIndex, statusColIndex).setValue("Resolved");
+        return ContentService.createTextOutput(JSON.stringify({ success: true, message: "Report resolved" })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ success: false, message: "Could not find Status column" })).setMimeType(ContentService.MimeType.JSON);
 }
 
 function getNicknames() {
