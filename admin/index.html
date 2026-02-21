@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Route Admin Dashboard</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        body {
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .admin-wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        table {
+            margin-top: 20px;
+            background: rgba(18, 22, 36, 0.78);
+            border-radius: 12px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        th {
+            background: rgba(18, 22, 36, 0.95);
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            color: var(--muted);
+            padding: 12px 10px;
+        }
+
+        td {
+            border-bottom: 1px solid rgba(39, 48, 74, 0.4);
+            padding: 12px 10px;
+        }
+
+        .refresh-btn {
+            margin-top: 20px;
+            background: var(--accent);
+            color: var(--bg);
+            font-weight: bold;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #9bbaff;
+        }
+
+        .config-warning {
+            border: 1px solid var(--danger);
+            background: rgba(255, 107, 107, 0.1);
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        /* Mobile-friendly responsive styles */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .admin-wrap {
+                padding: 0;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            #adminContent table {
+                display: none;
+            }
+
+            /* Intersections table: card layout on mobile */
+            #intersectionsTable {
+                display: block !important;
+            }
+
+            #intersectionsTable colgroup,
+            #intersectionsTable thead {
+                display: none;
+            }
+
+            #intersectionsTable tbody {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            #intersectionsTable tbody tr {
+                display: flex;
+                flex-wrap: wrap;
+                background: rgba(18, 22, 36, 0.78);
+                border-radius: 12px;
+                padding: 15px;
+                border-left: 3px solid var(--accent);
+                gap: 8px;
+            }
+
+            #intersectionsTable tbody tr td {
+                border: none;
+                padding: 4px 0;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(1) {
+                font-weight: bold;
+                color: var(--accent);
+                width: 60px;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(1)::before {
+                content: 'Route: ';
+                color: var(--muted);
+                font-weight: normal;
+                font-size: 11px;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(2) {
+                width: calc(100% - 80px);
+                font-weight: 500;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(3) {
+                width: 100%;
+                font-size: 12px;
+                color: var(--muted);
+            }
+
+            #intersectionsTable tbody tr td:nth-child(4),
+            #intersectionsTable tbody tr td:nth-child(5),
+            #intersectionsTable tbody tr td:nth-child(6),
+            #intersectionsTable tbody tr td:nth-child(7),
+            #intersectionsTable tbody tr td:nth-child(8) {
+                flex: 1;
+                text-align: center;
+                font-size: 13px;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(4)::before {
+                content: '6car: ';
+                color: var(--muted);
+                font-size: 10px;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(5)::before {
+                content: '5car: ';
+                color: var(--muted);
+                font-size: 10px;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(6)::before {
+                content: '4car: ';
+                color: var(--muted);
+                font-size: 10px;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(7)::before {
+                content: '3car: ';
+                color: var(--muted);
+                font-size: 10px;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(8)::before {
+                content: '2car: ';
+                color: var(--muted);
+                font-size: 10px;
+            }
+
+            #intersectionsTable tbody tr td:nth-child(9) {
+                width: 100%;
+                text-align: right;
+            }
+
+            /* GPS button sizing on mobile */
+            .gps-btn {
+                width: 32px !important;
+                min-width: 32px !important;
+                height: 32px !important;
+                padding: 2px !important;
+                font-size: 12px !important;
+            }
+
+            #logBodyMobile {
+                display: block;
+            }
+
+            .log-card {
+                background: rgba(18, 22, 36, 0.78);
+                border-radius: 12px;
+                padding: 15px;
+                margin-bottom: 12px;
+                border-left: 3px solid var(--accent);
+            }
+
+            .log-card-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 10px;
+                gap: 10px;
+            }
+
+            .log-card-row:last-child {
+                margin-bottom: 0;
+            }
+
+            .log-card-label {
+                font-size: 11px;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 600;
+                min-width: 80px;
+            }
+
+            .log-card-value {
+                flex: 1;
+                text-align: right;
+                word-break: break-word;
+            }
+
+            .refresh-btn {
+                width: 100%;
+                padding: 14px;
+                font-size: 16px;
+            }
+        }
+
+        @media (min-width: 769px) {
+            #logBodyMobile {
+                display: none;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .edit-nickname-btn {
+            min-width: 32px;
+            min-height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Password Protection -->
+    <div id="passwordPrompt"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:10000;">
+        <div
+            style="background:rgba(18, 22, 36, 0.95); padding:40px; border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.3); max-width:400px; width:90%;">
+            <h2 style="margin-top:0; color:var(--accent);">Admin Access</h2>
+            <p style="color:var(--muted); margin-bottom:20px;">Please enter the password to access the admin panel.</p>
+            <input type="password" id="passwordInput" placeholder="Enter password"
+                style="width:100%; padding:12px; border-radius:6px; border:1px solid rgba(124, 159, 255, 0.3); background:rgba(255,255,255,0.05); color:white; font-size:14px; margin-bottom:10px;" />
+            <div id="passwordError" style="color:var(--danger); margin-bottom:10px; font-size:13px; min-height:20px;">
+            </div>
+            <button onclick="checkPassword()"
+                style="width:100%; padding:12px; background:var(--accent); color:var(--bg); border:none; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">Unlock</button>
+            <div style="margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1);">
+                <p style="color:var(--muted); font-size:12px; margin:0;">
+                    <strong>Default password:</strong> admin123<br>
+                    <em>To change the password, see the instructions in the admin HTML file.</em>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="adminContent" style="display:none;">
+        <div
+            style="position:fixed; top:2px; right:5px; font-size:10px; color:rgba(255,255,255,0.2); pointer-events:none; z-index:9999;">
+            v2.1</div>
+        <div class="admin-wrap">
+            <header
+                style="background:transparent; padding:0; position:relative; box-shadow:none; backdrop-filter:none;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <h1>Traffic Logs</h1>
+                    <div id="carsInUse"
+                        style="font-size:14px; color:var(--accent); font-weight:bold; padding-bottom:5px;"></div>
+                </div>
+                <div class="meta" style="margin-top:0;">Real-time search activity from Google Sheets</div>
+            </header>
+
+            <div id="configWarning" class="config-warning">
+                <strong>Setup Required:</strong> Please open <code>js/config.js</code> and paste your Google Web App
+                URL.
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="refresh-btn" onclick="loadLogs()">Refresh Logs</button>
+                <button class="refresh-btn" onclick="showIntersections()"
+                    style="background:rgba(124, 159, 255, 0.2); border:1px solid var(--accent);">Manage
+                    Intersections</button>
+            </div>
+            <button class="refresh-btn" onclick="loadMore()" id="loadMoreBtn"
+                style="display:none; margin-top:10px; background:rgba(124, 159, 255, 0.2); border:1px solid var(--accent);">Load
+                More (20)</button>
+            <div id="status" class="meta" style="margin-top:10px;"></div>
+
+            <!-- Desktop table view -->
+            <div class="card table-wrapper" style="box-shadow:none; background:transparent; border:none;">
+                <table>
+                    <colgroup>
+                        <col style="width:15%">
+                        <col style="width:10%">
+                        <col style="width:15%">
+                        <col style="width:20%">
+                        <col style="width:10%">
+                        <col style="width:20%">
+                        <col style="width:10%">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>User ID</th>
+                            <th>Search Query</th>
+                            <th>Top Result</th>
+                            <th>6-Car Plan</th>
+                            <th>Intersection</th>
+                            <th>Map</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Mobile card view -->
+            <div id="logBodyMobile"></div>
+        </div>
+    </div>
+
+    <!-- Intersections View -->
+    <div id="intersectionsContent" style="display:none;" class="admin-wrap">
+        <header style="background:transparent; padding:0; position:relative; box-shadow:none; backdrop-filter:none;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                <h1>Intersections Manager</h1>
+                <button class="refresh-btn" onclick="showLogs()">Back to Logs</button>
+            </div>
+            <div class="meta" style="margin-top:0;">Edit intersection details and plans</div>
+        </header>
+
+        <div id="intersectionStatus" class="meta" style="margin-top:10px;"></div>
+
+        <div style="margin-top:20px; margin-bottom: 20px;">
+            <input type="text" id="intersectionSearch" placeholder="Search intersections..."
+                style="width:100%; padding:12px; border-radius:8px; border:1px solid rgba(124, 159, 255, 0.3); background:rgba(18, 22, 36, 0.78); color:white;">
+        </div>
+
+        <div class="card table-wrapper" style="box-shadow:none; background:transparent; border:none;">
+            <table id="intersectionsTable">
+                <colgroup>
+                    <col style="width:8%">
+                    <col style="width:22%">
+                    <col style="width:16%">
+                    <col style="width:8%">
+                    <col style="width:8%">
+                    <col style="width:8%">
+                    <col style="width:8%">
+                    <col style="width:8%">
+                    <col style="width:14%">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Route</th>
+                        <th>Intersection</th>
+                        <th>Coordinates</th>
+                        <th>6 Car</th>
+                        <th>5 Car</th>
+                        <th>4 Car</th>
+                        <th>3 Car</th>
+                        <th>2 Car</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="intersectionsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script>
+        // Password protection using SHA-256 hash
+        // Current password: "admin123"
+        // To change: Replace the hash below with a new SHA-256 hash of your desired password
+        // Generate hash at: https://emn178.github.io/online-tools/sha256.html
+        const PASSWORD_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'; // admin123
+
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function checkPassword() {
+            const input = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('passwordError');
+
+            if (!input) {
+                errorDiv.textContent = 'Please enter a password';
+                return;
+            }
+
+            const hash = await hashPassword(input);
+
+            if (hash === PASSWORD_HASH) {
+                sessionStorage.setItem('admin_authenticated', 'true');
+                document.getElementById('passwordPrompt').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+            } else {
+                errorDiv.textContent = 'Incorrect password. Please try again.';
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const passwordInput = document.getElementById('passwordInput');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        checkPassword();
+                    }
+                });
+                passwordInput.focus();
+            }
+
+            if (sessionStorage.getItem('admin_authenticated') === 'true') {
+                document.getElementById('passwordPrompt').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+            }
+        });
+
+        // Determine Cars in Use based on time
+        function updateCarsInUse() {
+            const now = new Date();
+            const minutes = now.getHours() * 60 + now.getMinutes();
+            let label = "2-car"; // Default (10:30 PM - 6:30 AM)
+
+            // 6:30 AM (390) - 2:30 PM (870)
+            if (minutes >= 390 && minutes < 870) {
+                label = "6-car";
+            }
+            // 2:30 PM (870) - 10:30 PM (1350)
+            else if (minutes >= 870 && minutes < 1350) {
+                label = "4-car";
+            }
+
+            const el = document.getElementById('carsInUse');
+            if (el) el.textContent = `Cars in Use: ${label}`;
+        }
+        updateCarsInUse();
+        setInterval(updateCarsInUse, 60000);
+    </script>
+
+    <script type="module">
+        import { GOOGLE_SCRIPT_URL } from '../js/config.js';
+        import { state, loadWorkbook, computeMatches } from '../js/data.js';
+
+        const $ = (id) => document.getElementById(id);
+
+        function safeDecode(s) {
+            if (!s) return "";
+            try { return decodeURIComponent(s); } catch (e) { return s; }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        window.showLogs = function () {
+            document.querySelector('#adminContent > .admin-wrap').style.display = 'block';
+            document.getElementById('intersectionsContent').style.display = 'none';
+        }
+
+        window.showIntersections = async function () {
+            document.querySelector('#adminContent > .admin-wrap').style.display = 'none';
+            document.getElementById('intersectionsContent').style.display = 'block';
+
+            if (state.DATA.length === 0) {
+                await loadIntersections();
+            }
+        }
+
+        async function loadIntersections() {
+            const status = $("intersectionStatus");
+            await loadWorkbook('FULL_MIGRATION', (kind, msg) => {
+                let color = "var(--muted)";
+                if (kind === "error") color = "var(--danger)";
+                if (kind === "ok") color = "var(--success)";
+                status.innerHTML = `<span style="color:${color}">${msg}</span>`;
+            }, () => {
+                renderIntersections();
+            });
+        }
+
+        function renderIntersections() {
+            const tbody = $("intersectionsBody");
+            tbody.innerHTML = "";
+
+            let toShow = [];
+            const query = $("intersectionSearch").value.trim();
+
+            if (query.length === 0) {
+                toShow = state.DATA.slice(0, 100);
+            } else {
+                state.query = query;
+                computeMatches();
+                toShow = state.matches;
+                if (toShow.length > 100) toShow = toShow.slice(0, 100);
+            }
+
+            toShow.forEach(item => {
+                const tr = document.createElement('tr');
+                const rawStreet = item._RAW_STREET || item.STREETSORT || ""; // Use preserved raw name if available
+                const displayStreet = item.STREETSORT || safeDecode(rawStreet); // Already decoded in data.js, but safe fallback
+                const displayCoords = item.coordinates || "";
+
+                tr.setAttribute('data-route-id', item.Route);
+                tr.setAttribute('data-raw-street', rawStreet);
+
+                const mapLink = displayCoords ? `<a href="https://www.google.com/maps?q=${displayCoords}" target="_blank" style="text-decoration:none; margin-left:5px;">📍</a>` : "";
+
+                tr.innerHTML = `
+                    <td>${item.Route || ''}</td>
+                    <td><div class="editable" data-field="name">${escapeHtml(displayStreet)}</div></td>
+                    <td><div class="editable" data-field="coordinates">${escapeHtml(displayCoords)}${mapLink}</div></td>
+                    <td><div class="editable" data-field="6 car">${escapeHtml(item["6 car"])}</div></td>
+                    <td><div class="editable" data-field="5 car">${escapeHtml(item["5 car"])}</div></td>
+                    <td><div class="editable" data-field="4 car">${escapeHtml(item["4 car"])}</div></td>
+                    <td><div class="editable" data-field="3 car">${escapeHtml(item["3 car"])}</div></td>
+                    <td><div class="editable" data-field="2 car">${escapeHtml(item["2 car"])}</div></td>
+                    <td>
+                        <button class="edit-btn" style="background:var(--accent); color:var(--bg); border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="toggleEdit(this)">Edit</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            if ((query.length > 0 && state.matches.length > 100) || (query.length === 0 && state.DATA.length > 100)) {
+                const warning = document.createElement('tr');
+                const total = query.length === 0 ? state.DATA.length : state.matches.length;
+                warning.innerHTML = `<td colspan="9" style="text-align:center; color:var(--muted);">Showing 100 of ${total.toLocaleString()}. Use search to find specific locations.</td>`;
+                tbody.appendChild(warning);
+            }
+        }
+
+        window.toggleEdit = function (btn) {
+            const tr = btn.closest('tr');
+            const isEditing = tr.classList.contains('editing');
+
+            if (isEditing) {
+                saveIntersection(tr);
+            } else {
+                tr.classList.add('editing');
+                btn.textContent = "Save";
+                btn.style.background = "var(--ok)"; // Fixed: was success (undefined)
+
+
+                tr.querySelectorAll('.editable').forEach(div => {
+                    const clone = div.cloneNode(true);
+                    const link = clone.querySelector('a');
+                    if (link) link.remove();
+                    const val = clone.innerText.trim();
+                    const field = div.getAttribute('data-field');
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.value = val === "null" || val === "undefined" || val === "—" ? "" : val;
+                    input.style.width = "100%";
+                    input.style.background = "rgba(0,0,0,0.2)";
+                    input.style.border = "1px solid var(--accent)";
+                    input.style.color = "white";
+                    input.style.padding = "4px";
+
+                    div.innerHTML = '';
+
+                    // Add GPS button for coordinates field
+                    if (field === 'coordinates') {
+                        div.style.display = 'flex';
+                        div.style.alignItems = 'center';
+                        div.style.gap = '4px';
+                        input.style.flex = '1';
+                        input.style.minWidth = '0';
+                        div.appendChild(input);
+
+                        const gpsBtn = document.createElement('button');
+                        gpsBtn.textContent = '📍';
+                        gpsBtn.title = 'Use my current location';
+                        gpsBtn.className = 'gps-btn';
+                        gpsBtn.style.cssText = 'flex-shrink:0; padding:4px 6px; background:rgba(124,159,255,0.2); border:1px solid var(--accent); color:var(--accent); border-radius:4px; cursor:pointer; font-size:14px; line-height:1;';
+                        gpsBtn.onclick = (e) => {
+                            e.preventDefault();
+                            gpsBtn.textContent = '⏳';
+                            navigator.geolocation.getCurrentPosition(
+                                (pos) => {
+                                    input.value = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+                                    gpsBtn.textContent = '✅';
+                                    setTimeout(() => { gpsBtn.textContent = '📍'; }, 1500);
+                                },
+                                (err) => {
+                                    alert('Could not get location: ' + err.message);
+                                    gpsBtn.textContent = '📍';
+                                },
+                                { enableHighAccuracy: true, timeout: 8000 }
+                            );
+                        };
+                        div.appendChild(gpsBtn);
+                    } else {
+                        div.appendChild(input);
+                    }
+                });
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.textContent = "Cancel";
+                cancelBtn.className = "cancel-btn";
+                cancelBtn.style.cssText = "background:transparent; color:var(--danger); border:1px solid var(--danger); padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:5px;";
+                cancelBtn.onclick = () => cancelEdit(tr);
+                btn.after(cancelBtn);
+            }
+        }
+
+        window.cancelEdit = function (tr) {
+            renderIntersections();
+        }
+
+        async function saveIntersection(tr) {
+            const routeId = tr.getAttribute('data-route-id');
+            const originalRawName = tr.getAttribute('data-raw-street');
+
+            const updates = {};
+            tr.querySelectorAll('.editable').forEach(div => {
+                const field = div.getAttribute('data-field');
+                const input = div.querySelector('input');
+                const val = input.value;
+
+                if (field === 'name') updates.name = val;
+                else if (field === 'coordinates') updates.coordinates = val;
+                else {
+                    if (!updates.plans) updates.plans = {};
+                    updates.plans[field] = val;
+                }
+            });
+
+            const btn = tr.querySelector('.edit-btn');
+            const cancelBtn = tr.querySelector('.cancel-btn');
+            btn.textContent = "Saving...";
+            btn.disabled = true;
+            if (cancelBtn) cancelBtn.style.display = 'none';
+
+            try {
+                const payload = {
+                    action: "updateData",
+                    route: routeId,
+                    intersection: originalRawName,
+                    updates: updates
+                };
+
+                const res = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    const item = state.DATA.find(i => String(i.Route) === String(routeId) && i.STREETSORT === originalRawName);
+                    if (item) {
+                        item.STREETSORT = updates.name;
+                        item.coordinates = updates.coordinates;
+                        if (updates.plans) {
+                            if (updates.plans['6 car']) item["6 car"] = updates.plans['6 car'];
+                            if (updates.plans['4 car']) item["4 car"] = updates.plans['4 car'];
+                            if (updates.plans['2 car']) item["2 car"] = updates.plans['2 car'];
+                        }
+                    }
+
+                    $("intersectionStatus").innerHTML = `<span style="color:var(--success)">Saved to Google Sheets!</span>`;
+                    setTimeout(() => $("intersectionStatus").textContent = "", 3000);
+                    renderIntersections();
+
+                } else {
+                    const txt = await res.text();
+                    alert("Error saving: " + txt);
+                    btn.textContent = "Save";
+                    btn.disabled = false;
+                    if (cancelBtn) cancelBtn.style.display = 'inline-block';
+                }
+            } catch (e) {
+                alert("Error: " + e.message);
+                btn.textContent = "Save";
+                btn.disabled = false;
+                if (cancelBtn) cancelBtn.style.display = 'inline-block';
+            }
+        }
+
+        let debounceTimer;
+        $("intersectionSearch").addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                renderIntersections();
+            }, 300);
+        });
+
+    </script>
+    <script type="module">
+        import { GOOGLE_SCRIPT_URL } from '../js/config.js';
+
+        const $ = (id) => document.getElementById(id);
+        let nicknamesCache = {};
+        let allLogs = [];
+        let displayedCount = 0;
+        const LOGS_PER_PAGE = 20;
+
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (err) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    return true;
+                } catch (e) {
+                    document.body.removeChild(textArea);
+                    return false;
+                }
+            }
+        }
+
+        async function loadNicknamesFromSheets() {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("YOUR_")) {
+                const stored = localStorage.getItem('device_nicknames');
+                nicknamesCache = stored ? JSON.parse(stored) : {};
+                return;
+            }
+
+            try {
+                const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=getNicknames`);
+                if (res.ok) {
+                    nicknamesCache = await res.json();
+                    localStorage.setItem('device_nicknames', JSON.stringify(nicknamesCache));
+                }
+            } catch (err) {
+                console.warn('Failed to load nicknames from Google Sheets, using localStorage:', err);
+                const stored = localStorage.getItem('device_nicknames');
+                nicknamesCache = stored ? JSON.parse(stored) : {};
+            }
+        }
+
+        async function saveNicknameToSheets(deviceId, nickname) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("YOUR_")) {
+                setNicknameLocal(deviceId, nickname);
+                return;
+            }
+
+            try {
+                const params = new URLSearchParams({
+                    action: 'setNickname',
+                    deviceId: deviceId,
+                    nickname: nickname || ''
+                });
+
+                const res = await fetch(`${GOOGLE_SCRIPT_URL}?${params.toString()}`);
+
+                if (res.ok) {
+                    if (nickname && nickname.trim()) {
+                        nicknamesCache[deviceId] = nickname.trim();
+                    } else {
+                        delete nicknamesCache[deviceId];
+                    }
+                    localStorage.setItem('device_nicknames', JSON.stringify(nicknamesCache));
+                }
+            } catch (err) {
+                console.error('Failed to save nickname to Google Sheets:', err);
+                setNicknameLocal(deviceId, nickname);
+            }
+        }
+
+        function setNicknameLocal(deviceId, nickname) {
+            if (nickname && nickname.trim()) {
+                nicknamesCache[deviceId] = nickname.trim();
+            } else {
+                delete nicknamesCache[deviceId];
+            }
+            localStorage.setItem('device_nicknames', JSON.stringify(nicknamesCache));
+        }
+
+        function getDisplayName(deviceId) {
+            return nicknamesCache[deviceId] || deviceId;
+        }
+
+        function renderLogs(start, end, clearFirst) {
+            const tbody = $("logBody");
+            const mobileBody = $("logBodyMobile");
+            const logsToRender = allLogs.slice(start, end);
+
+            if (logsToRender.length === 0) return;
+
+            const desktopHTML = logsToRender.map(l => {
+                let timeStr = l.timestamp;
+                try { timeStr = new Date(l.timestamp).toLocaleString(); } catch (e) { }
+
+                let mapLink = "—";
+                if (l.location) {
+                    mapLink = `<a href="https://www.google.com/maps?q=${l.location}" target="_blank" style="color:var(--accent)">View</a>`;
+                }
+
+                const deviceId = l.user || "Unknown";
+                const displayName = getDisplayName(deviceId);
+                const isNicknamed = displayName !== deviceId;
+
+                // Strip everything after " (" for the copy value to remove YARD/Division
+                const topStr = l.topResultSummary != null ? String(l.topResultSummary) : "";
+                const routeOnly = topStr ? topStr.split(" (")[0].trim() : "";
+
+                return `
+                <tr>
+                    <td>${escape(timeStr)}</td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="pill" style="display:inline-flex; border:none; background:${isNicknamed ? 'rgba(124, 159, 255, 0.15)' : 'rgba(255,255,255,0.05)'}; font-size:13px; padding:4px 10px;" title="Device ID: ${escape(deviceId)}">${escape(displayName)}</span>
+                            <button class="edit-nickname-btn" data-device-id="${escape(deviceId)}" style="font-size:9px; padding:2px 4px; background:transparent; border:1px solid var(--accent); color:var(--accent); cursor:pointer; border-radius:3px;" title="Edit nickname">✏️</button>
+                        </div>
+                    </td>
+                    <td style="color:var(--accent)">${escape(l.query)}</td>
+                    <td><span class="copy-route" data-route="${escape(routeOnly)}" style="cursor:pointer; text-decoration:underline; text-decoration-style:dotted;" title="Click to copy">${escape(topStr)}</span></td>
+                    <td style="color:#ffd700">${escape(l.sixCar || "-")}</td>
+                    <td>${escape(l.intersection)}</td>
+                    <td>${mapLink}</td>
+                </tr>
+            `}).join("");
+
+            const mobileHTML = logsToRender.map(l => {
+                let timeStr = l.timestamp;
+                try { timeStr = new Date(l.timestamp).toLocaleString(); } catch (e) { }
+
+                const deviceId = l.user || "Unknown";
+                const displayName = getDisplayName(deviceId);
+                const isNicknamed = displayName !== deviceId;
+
+                let mapLink = "—";
+                if (l.location) {
+                    mapLink = `<a href="https://www.google.com/maps?q=${l.location}" target="_blank" style="color:var(--accent)">View Map</a>`;
+                }
+
+                return `
+                <div class="log-card">
+                    <div class="log-card-row">
+                        <span class="log-card-label">Time</span>
+                        <span class="log-card-value">${escape(timeStr)}</span>
+                    </div>
+                    <div class="log-card-row">
+                        <span class="log-card-label">User</span>
+                        <div class="log-card-value" style="display:flex; align-items:center; justify-content:flex-end; gap:8px;">
+                            <span class="pill" style="display:inline-flex; border:none; background:${isNicknamed ? 'rgba(124, 159, 255, 0.15)' : 'rgba(255,255,255,0.05)'}; font-size:18px; padding:6px 12px; font-weight:500; flex-grow:1; justify-content:center;" title="Device ID: ${escape(deviceId)}">${escape(displayName)}</span>
+                            <button class="edit-nickname-btn-mobile" data-device-id="${escape(deviceId)}" style="font-size:8px; padding:3px 5px; background:transparent; border:1px solid rgba(124, 159, 255, 0.5); color:var(--accent); cursor:pointer; border-radius:3px; flex-shrink:0; width:28px;" title="Edit nickname">✏️</button>
+                        </div>
+                    </div>
+                    <div class="log-card-row">
+                        <span class="log-card-label">Query</span>
+                        <span class="log-card-value" style="color:var(--accent)">${escape(l.query)}</span>
+                    </div>
+                    <div class="log-card-row">
+                        <span class="log-card-label">Result</span>
+                        <span class="log-card-value"><span class="copy-route" data-route="${escape(l.topResultSummary != null ? String(l.topResultSummary).split(" (")[0].trim() : "")}" style="cursor:pointer; text-decoration:underline; text-decoration-style:dotted;" title="Click to copy">${escape(l.topResultSummary != null ? String(l.topResultSummary) : "")}</span></span>
+                    </div>
+                    ${l.sixCar ? `
+                    <div class="log-card-row">
+                        <span class="log-card-label">6-Car</span>
+                        <span class="log-card-value" style="color:#ffd700">${escape(l.sixCar)}</span>
+                    </div>` : ''}
+                    <div class="log-card-row">
+                        <span class="log-card-label">Location</span>
+                        <span class="log-card-value">${escape(l.intersection)}</span>
+                    </div>
+                    <div class="log-card-row">
+                        <span class="log-card-label">Map</span>
+                        <span class="log-card-value">${mapLink}</span>
+                    </div>
+                </div>
+            `}).join("");
+
+            if (clearFirst) {
+                tbody.innerHTML = desktopHTML;
+                mobileBody.innerHTML = mobileHTML;
+            } else {
+                tbody.innerHTML += desktopHTML;
+                mobileBody.innerHTML += mobileHTML;
+            }
+
+            // Add click events for route copying
+            document.querySelectorAll('.copy-route').forEach(el => {
+                el.addEventListener('click', async function () {
+                    const route = this.getAttribute('data-route');
+                    const success = await copyToClipboard(route);
+                    if (success) {
+                        const originalText = this.textContent;
+                        this.textContent = '✓ Copied!';
+                        this.style.color = 'var(--success)';
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                            this.style.color = '';
+                        }, 1500);
+                    }
+                });
+            });
+
+            // Add edit nickname listeners
+            document.querySelectorAll('.edit-nickname-btn, .edit-nickname-btn-mobile').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const deviceId = btn.getAttribute('data-device-id');
+                    const currentNickname = getDisplayName(deviceId);
+                    const prompt_text = deviceId === currentNickname
+                        ? `Enter a nickname for device "${deviceId}":`
+                        : `Edit nickname for device "${deviceId}"\nCurrent: "${currentNickname}"`;
+
+                    const newNickname = prompt(prompt_text);
+                    if (newNickname !== null) {
+                        await saveNicknameToSheets(deviceId, newNickname);
+                        // Refresh display
+                        const start = Math.max(0, displayedCount - LOGS_PER_PAGE);
+                        renderLogs(0, displayedCount, true);
+                    }
+                });
+            });
+        }
+
+        window.loadLogs = async function () {
+            const status = $("status");
+            status.innerHTML = 'Loading logs... <span class="spinner"></span>';
+            $("loadMoreBtn").style.display = "none";
+
+            try {
+                if (!GOOGLE_SCRIPT_URL) {
+                    throw new Error("Configuration missing. Please set GOOGLE_SCRIPT_URL in js/config.js");
+                }
+
+                if (GOOGLE_SCRIPT_URL.includes("YOUR_")) {
+                    document.getElementById('configWarning').style.display = 'block';
+                    status.innerHTML = "";
+                    return;
+                }
+
+                // Load nicknames first
+                await loadNicknamesFromSheets();
+
+                // Fetch logs from Google Sheets
+                // The script returns logs by default or with action=getLogs (implicit)
+                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getLogs`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    // Try to handle if it returned an error object
+                    if (data.status === "error") throw new Error(data.message);
+                    throw new Error("Invalid data format received");
+                }
+
+                allLogs = data;
+                displayedCount = 0;
+                renderLogs(0, LOGS_PER_PAGE, true);
+                displayedCount = Math.min(allLogs.length, LOGS_PER_PAGE);
+
+                status.innerHTML = `Showing ${displayedCount} of ${allLogs.length} logs`;
+                if (allLogs.length > displayedCount) {
+                    $("loadMoreBtn").style.display = "block";
+                }
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                status.innerHTML = `<span style="color:var(--danger)">Error loading logs: ${error.message}</span>`;
+            }
+        }
+
+        window.loadMore = function () {
+            const nextCount = Math.min(allLogs.length, displayedCount + LOGS_PER_PAGE);
+            renderLogs(displayedCount, nextCount, false);
+            displayedCount = nextCount;
+
+            $("status").innerHTML = `Showing ${displayedCount} of ${allLogs.length} logs`;
+            if (displayedCount >= allLogs.length) {
+                $("loadMoreBtn").style.display = "none";
+            }
+        }
+
+        function escape(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initial load
+        if (sessionStorage.getItem('admin_authenticated') === 'true') {
+            loadLogs();
+        } else {
+            // Wait for auth
+            const checker = setInterval(() => {
+                if (sessionStorage.getItem('admin_authenticated') === 'true') {
+                    clearInterval(checker);
+                    loadLogs();
+                }
+            }, 500);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,332 @@
+:root {
+    --bg: #0b0d12;
+    --card: #121624;
+    --text: #e8ebf3;
+    --muted: #a8b0c6;
+    --border: #27304a;
+    --accent: #7aa2ff;
+    --danger: #ff6b6b;
+    --ok: #2dd4bf;
+    --hi: rgba(122, 162, 255, 0.18);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    background: radial-gradient(1000px 600px at 10% 0%, rgba(122, 162, 255, 0.22), transparent 55%),
+        radial-gradient(1000px 600px at 90% 10%, rgba(45, 212, 191, 0.18), transparent 55%),
+        var(--bg);
+    color: var(--text);
+}
+
+header {
+    padding: 16px 14px 10px;
+    position: sticky;
+    top: 0;
+    background: linear-gradient(to bottom, rgba(11, 13, 18, 0.95), rgba(11, 13, 18, 0.72), rgba(11, 13, 18, 0));
+    backdrop-filter: blur(10px);
+    z-index: 10;
+}
+
+.wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+h1 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    letter-spacing: 0.2px;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+    align-items: center;
+}
+
+input[type="search"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(18, 22, 36, 0.8);
+    color: var(--text);
+    outline: none;
+}
+
+input[type="search"]::placeholder {
+    color: rgba(168, 176, 198, 0.75);
+}
+
+button {
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(18, 22, 36, 0.9);
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+button:hover {
+    border-color: rgba(122, 162, 255, 0.55);
+}
+
+button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.pill {
+    border: 1px solid var(--border);
+    background: rgba(18, 22, 36, 0.75);
+    padding: 6px 10px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+main {
+    padding: 0 14px 18px;
+}
+
+.card {
+    margin-top: 12px;
+    border: 1px solid var(--border);
+    background: rgba(18, 22, 36, 0.78);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 13px;
+}
+
+col.route {
+    width: 26%;
+}
+
+col.yard {
+    width: 17%;
+}
+
+col.street {
+    width: 57%;
+}
+
+table th,
+table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+thead th {
+    position: sticky;
+    top: 0;
+    background: rgba(18, 22, 36, 0.95);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 10px;
+    font-weight: 600;
+    color: rgba(232, 235, 243, 0.92);
+    z-index: 1;
+}
+
+tbody td {
+    border-bottom: 1px solid rgba(39, 48, 74, 0.7);
+    padding: 14px 10px;
+    /* bigger rows */
+    color: rgba(232, 235, 243, 0.92);
+    white-space: normal;
+    /* wrap */
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+/* Zebra striping */
+tr.zebra-odd>td {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+tr.zebra-even>td {
+    background: rgba(255, 255, 255, 0.00);
+}
+
+tr.zebra-odd.detail-row>td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+tr.zebra-even.detail-row>td {
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    border-top: 1px solid rgba(39, 48, 74, 0.65);
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.left-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.note {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.error {
+    color: var(--danger);
+    font-size: 12px;
+}
+
+.ok {
+    color: var(--ok);
+    font-size: 12px;
+}
+
+.cell-flex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.cell-flex>span {
+    min-width: 0;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.clickable:hover {
+    filter: brightness(1.08);
+}
+
+.icon-btn {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(18, 22, 36, 0.92);
+    cursor: pointer;
+    user-select: none;
+    flex: 0 0 auto;
+}
+
+.icon-btn:hover {
+    border-color: rgba(122, 162, 255, 0.55);
+}
+
+.icon-btn:active {
+    transform: translateY(1px);
+}
+
+.link {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}
+
+.detail-row td {
+    padding: 10px 10px 14px;
+}
+
+.detail-box {
+    border: 1px solid rgba(39, 48, 74, 0.8);
+    background: rgba(11, 13, 18, 0.35);
+    border-radius: 12px;
+    padding: 10px;
+    overflow: auto;
+}
+
+.mini {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    font-size: 12px;
+}
+
+.mini th,
+.mini td {
+    border-bottom: 1px solid rgba(39, 48, 74, 0.7);
+    padding: 8px 8px;
+    text-align: center !important;
+    vertical-align: middle !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mini .highlight {
+    background: var(--hi);
+    border-radius: 6px;
+}
+
+.spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(232, 235, 243, 0.25);
+    border-top-color: rgba(232, 235, 243, 0.9);
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 0.85s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 760px) {
+    .controls {
+        grid-template-columns: 1fr;
+    }
+
+    button {
+        width: 100%;
+    }
+}
+
+/* Reserve space for status so it doesn't push content */
+#status {
+    min-height: 34px;
+}

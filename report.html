@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Route Dashboard (Report)</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body.report-mode {
+            border-top: 5px solid var(--accent);
+        }
+    </style>
+</head>
+
+<body class="report-mode">
+    <div style="font-size:10px; color:rgba(255,255,255,0.2); float:right;">v2.1</div>
+    <header>
+        <div class="wrap">
+            <h1>Route Dashboard</h1>
+            <div class="controls">
+                <input id="q" type="search" placeholder='Search . Example: "3rd jef"' autocomplete="off" />
+                <button id="btnNear">Search near me (top 5)</button>
+            </div>
+            <div id="status" class="meta" style="margin-top:8px;"></div>
+        </div>
+    </header>
+
+    <main>
+        <div class="wrap">
+            <div class="card">
+                <table>
+                    <colgroup>
+                        <col class="route" />
+                        <col class="yard" />
+                        <col class="street" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Route</th>
+                            <th id="th-plan">Car</th>
+                            <th>Intersection</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+                <div class="actions">
+                    <div class="left-actions">
+                        <button id="btnMore">Load more</button>
+                        <span class="note" id="shownNote">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
