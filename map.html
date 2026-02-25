@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Intersection Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+
+  <style>
+    html,
+    body,
+    #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      position: absolute;
+      top: 220px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .legend {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+      font-size: 12px;
+      z-index: 1000;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+
+    .legend-item.off {
+      opacity: 0.3;
+    }
+
+    .legend-color {
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="fixed top-0 left-0 right-0 bg-white p-2 shadow z-50 space-y-2">
+    <div class="flex gap-4 items-center">
+      <select id="colorMode" class="border p-1 rounded" onchange="resetFilters(); updateLegend(); redrawAll();">
+        <option value="yard">Color by YARD</option>
+        <option value="6car">Color by 6 CAR</option>
+      </select>
+
+      <label class="flex items-center gap-1">
+        <input type="checkbox" id="togglePolygons" checked onchange="redrawAll()">
+        Show Polygons
+      </label>
+
+      <button onclick="loadData()" class="bg-blue-600 text-white px-3 py-1 rounded">Load Data</button>
+    </div>
+
+    <textarea id="dataInput" class="w-full h-28 border p-2 text-xs" placeholder="Paste JSON data here"></textarea>
+  </div>
+
+  <div id="map"></div>
+  <div id="legend" class="legend"></div>
+
+  <script>
+    // High contrast colors
+    const yardColors = {
+      W: "#1f77b4",
+      C: "#ff7f0e",
+      V: "#2ca02c"
+    };
+
+    const sixCarColors = {
+      "24": "#00bcd4",
+      "25": "#3f51b5",
+      "44": "#f1c40f",
+      "45": "#e67e22",
+      "64": "#e74c3c",
+      "65": "#8e44ad",
+      "default": "#7f8c8d"
+    };
+
+    function getColorBy6Car(v) {
+      return sixCarColors[String(v)] || sixCarColors.default;
+    }
+
+    // Map init
+    const map = L.map('map').setView([34.0522, -118.2437], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+    // Panes
+    map.createPane("polygonsPane");
+    map.getPane("polygonsPane").style.zIndex = 400;
+    map.createPane("markersPane");
+    map.getPane("markersPane").style.zIndex = 500;
+
+    let allData = [];
+    let markers = [];
+    let polygons = [];
+    let activeCategories = {};
+
+    function getRadius() {
+      const z = map.getZoom();
+      if (z <= 9) return 2;
+      if (z <= 11) return 4;
+      if (z <= 13) return 6;
+      if (z <= 15) return 8;
+      return 10;
+    }
+
+    function loadData() {
+      try {
+        allData = JSON.parse(document.getElementById("dataInput").value);
+        resetFilters();
+        updateLegend();
+        redrawAll();
+      } catch {
+        alert("Invalid JSON");
+      }
+    }
+
+    function resetFilters() {
+      activeCategories = {};
+    }
+
+    function redrawAll() {
+      drawCategoryPolygons();
+      plotMarkers();
+    }
+
+    function plotMarkers() {
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      const mode = document.getElementById("colorMode").value;
+      const r = getRadius();
+
+      allData.forEach(pt => {
+        if (!pt.coordinates) return;
+
+        const key = mode === "yard" ? pt.YARD : (pt["6car"] || "default");
+        if (activeCategories[key] === false) return;
+
+        const [lat, lng] = pt.coordinates.split(',').map(Number);
+        const color = mode === "yard" ? yardColors[key] || "#999" : getColorBy6Car(key);
+
+        const popupHtml = `<b>Intersection:</b> ${pt.STREETSORT || "N/A"}<br>` +
+          `<b>Route:</b> ${pt.Route || "N/A"}<br>` +
+          `<b>YARD:</b> ${pt.YARD || "N/A"}<br>` +
+          `<b>6 Car:</b> ${pt["6car"] || "N/A"}`;
+
+        const marker = L.circleMarker([lat, lng], {
+          pane: "markersPane",
+          radius: r,
+          color: "#ffffff",
+          weight: 1.5,
+          fillColor: color,
+          fillOpacity: 0.95
+        }).bindPopup(popupHtml).addTo(map);
+
+        markers.push(marker);
+      });
+    }
+
+    function drawCategoryPolygons() {
+      polygons.forEach(p => map.removeLayer(p));
+      polygons = [];
+      if (!document.getElementById("togglePolygons").checked) return;
+
+      const mode = document.getElementById("colorMode").value;
+      const groups = {};
+
+      allData.forEach(pt => {
+        if (!pt.coordinates) return;
+        const key = mode === "yard" ? pt.YARD : (pt["6car"] || "default");
+        if (activeCategories[key] === false) return;
+
+        if (!groups[key]) groups[key] = [];
+        const [lat, lng] = pt.coordinates.split(',').map(Number);
+        groups[key].push([lng, lat]); // GeoJSON order: [lng, lat]
+      });
+
+      for (const key in groups) {
+        const rawCoords = groups[key];
+        if (rawCoords.length < 3) continue;
+
+        // --- Fast outlier rejection using squared distance from centroid ---
+        const meanLng = rawCoords.reduce((s, c) => s + c[0], 0) / rawCoords.length;
+        const meanLat = rawCoords.reduce((s, c) => s + c[1], 0) / rawCoords.length;
+        const withDist = rawCoords.map(c => ({ c, d: (c[0] - meanLng) ** 2 + (c[1] - meanLat) ** 2 }));
+        withDist.sort((a, b) => a.d - b.d);
+        const medianDist = withDist[Math.floor(withDist.length / 2)].d;
+        const threshold = medianDist * 9; // 3x linear distance = 9x squared
+        const filtered = withDist.filter(x => x.d <= threshold).map(x => x.c);
+        if (filtered.length < 3) continue;
+
+        const points = turf.points(filtered);
+        const color = mode === "yard" ? yardColors[key] || "#999" : getColorBy6Car(key);
+
+        // Try concave hull (tight), fallback to convex
+        let hull = null;
+        try { hull = turf.concave(points, { maxEdge: 3, units: "kilometers" }); } catch (e) { }
+        if (!hull) { try { hull = turf.convex(points); } catch (e) { } }
+        if (!hull) continue;
+
+        const polyLayer = L.geoJSON(hull, {
+          pane: "polygonsPane",
+          style: { color: color, weight: 2, fillOpacity: 0.15, opacity: 0.9 }
+        }).addTo(map);
+
+        polygons.push(polyLayer);
+      }
+    }
+
+
+    map.on('moveend zoomend', () => { redrawAll(); });
+
+    function updateLegend() {
+      const mode = document.getElementById("colorMode").value;
+      const legend = document.getElementById("legend");
+      legend.innerHTML = "";
+
+      const items = mode === "yard"
+        ? Object.keys(yardColors)
+        : ["24", "25", "44", "45", "64", "65", "default"];
+
+      legend.innerHTML += `<b>${mode === "yard" ? "YARD" : "6 CAR"} Legend</b><br>`;
+
+      items.forEach(key => {
+        if (activeCategories[key] === undefined) activeCategories[key] = true;
+
+        const color = mode === "yard" ? yardColors[key] : getColorBy6Car(key);
+        const label = key === "default" ? "No Value" : key;
+
+        const div = document.createElement("div");
+        div.className = "legend-item" + (activeCategories[key] ? "" : " off");
+        div.innerHTML = `<div class="legend-color" style="background:${color}"></div>${label}`;
+
+        div.onclick = () => {
+          activeCategories[key] = !activeCategories[key];
+          updateLegend();
+          redrawAll();
+        };
+
+        legend.appendChild(div);
+      });
+    }
+
+    updateLegend();
+  </script>
+
+</body>
+
+</html>
