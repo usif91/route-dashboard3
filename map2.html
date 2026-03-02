@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Intersection Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@turf/turf/turf.min.js"></script>
+
+<style>
+html, body, #map { height:100%; margin:0; padding:0; }
+
+#map { position:absolute; top:220px; left:0; right:0; bottom:0; }
+
+.legend {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.2);
+  font-size: 12px;
+  z-index: 1000;
+  min-width: 160px;
+}
+
+.legend-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:4px;
+}
+
+.legend-item.off { opacity:0.3; }
+
+.legend-left {
+  display:flex;
+  align-items:center;
+  cursor:pointer;
+}
+
+.legend-color {
+  width:14px;
+  height:14px;
+  margin-right:6px;
+  border-radius:50%;
+}
+
+.legend-buttons {
+  display:flex;
+  gap:4px;
+  margin-bottom:6px;
+}
+
+.legend button {
+  border:1px solid #ccc;
+  padding:2px 6px;
+  font-size:11px;
+  border-radius:4px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="fixed top-0 left-0 right-0 bg-white p-2 shadow z-50 space-y-2">
+  <div class="flex gap-4 items-center">
+    <select id="colorMode" class="border p-1 rounded" onchange="resetFilters(); updateLegend(); redrawAll();">
+      <option value="yard">Color by YARD</option>
+      <option value="6car">Color by 6 CAR</option>
+      <option value="5car">Color by 5 CAR</option>
+      <option value="4car">Color by 4 CAR</option>
+      <option value="3car">Color by 3 CAR</option>
+      <option value="2car">Color by 2 CAR</option>
+    </select>
+
+    <label class="flex items-center gap-1">
+      <input type="checkbox" id="togglePolygons" checked onchange="redrawAll()"> Show Polygons
+    </label>
+
+    <button onclick="loadData()" class="bg-blue-600 text-white px-3 py-1 rounded">Load Data</button>
+  </div>
+
+  <textarea id="dataInput" class="w-full h-28 border p-2 text-xs"
+    placeholder="Paste JSON data here"></textarea>
+</div>
+
+<div id="map"></div>
+<div id="legend" class="legend"></div>
+
+<script>
+// ---------- COLORS ----------
+const yardColors = { W:"#1f77b4", C:"#ff7f0e", V:"#2ca02c" };
+
+const carColors = {
+ "24":"#00bcd4","25":"#3f51b5","44":"#f1c40f",
+ "45":"#e67e22","64":"#e74c3c","65":"#8e44ad",
+ "default":"#7f8c8d"
+};
+
+function getCarColor(v){ return carColors[String(v)] || carColors.default; }
+
+// ---------- MAP ----------
+const map = L.map('map').setView([34.0522,-118.2437],10);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+
+map.createPane("polygonsPane"); map.getPane("polygonsPane").style.zIndex=400;
+map.createPane("markersPane"); map.getPane("markersPane").style.zIndex=500;
+
+let allData=[], markers=[], polygons=[], activeCategories={};
+
+function getRadius(){
+  const z=map.getZoom();
+  if(z<=9) return 2;
+  if(z<=11) return 4;
+  if(z<=13) return 6;
+  if(z<=15) return 8;
+  return 10;
+}
+
+function getCategoryKey(pt){
+  const mode=document.getElementById("colorMode").value;
+  if(mode==="yard") return pt.YARD;
+  return pt[mode] || "default";
+}
+
+function getCategoryColor(key){
+  const mode=document.getElementById("colorMode").value;
+  return mode==="yard" ? yardColors[key]||"#999" : getCarColor(key);
+}
+
+// ---------- LOAD ----------
+
+function loadData() {
+  try {
+    let raw = document.getElementById("dataInput").value.trim();
+
+    // Remove any trailing commas after last object
+    raw = raw.replace(/,\s*$/, "");
+
+    // If it doesn't start with [, wrap it
+    if (!raw.startsWith("[")) {
+      raw = "[" + raw;
+    }
+
+    // If it doesn't end with ], add it
+    if (!raw.endsWith("]")) {
+      raw = raw + "]";
+    }
+
+    allData = JSON.parse(raw);
+
+    resetFilters();
+    updateLegend();
+    redrawAll();
+
+  } catch (e) {
+    alert("Invalid JSON format. Please check your pasted data.");
+    console.error(e);
+  }
+}
+
+
+function resetFilters(){ activeCategories={}; }
+
+function redrawAll(){
+  drawCategoryPolygons();
+  plotMarkers();
+}
+
+// ---------- MARKERS ----------
+function plotMarkers(){
+  markers.forEach(m=>map.removeLayer(m));
+  markers=[];
+  const r=getRadius();
+
+  allData.forEach(pt=>{
+    if(!pt.coordinates) return;
+    const key=getCategoryKey(pt);
+    if(activeCategories[key]===false) return;
+
+    const [lat,lng]=pt.coordinates.split(',').map(Number);
+    const color=getCategoryColor(key);
+
+    const marker=L.circleMarker([lat,lng],{
+      pane:"markersPane",
+      radius:r,color:"#fff",weight:1.5,
+      fillColor:color,fillOpacity:0.95
+    }).bindPopup(`<b>${pt.STREETSORT||""}</b><br>
+    Route: ${pt.ROUTE||""}<br>
+    Yard: ${pt.YARD||""}<br>
+    6car:${pt["6car"]||""} 5car:${pt["5car"]||""}
+    `).addTo(map);
+
+    markers.push(marker);
+  });
+}
+
+// ---------- POLYGONS ----------
+function drawCategoryPolygons(){
+  polygons.forEach(p=>map.removeLayer(p));
+  polygons=[];
+  if(!document.getElementById("togglePolygons").checked) return;
+
+  const groups={};
+  allData.forEach(pt=>{
+    if(!pt.coordinates) return;
+    const key=getCategoryKey(pt);
+    if(activeCategories[key]===false) return;
+    if(!groups[key]) groups[key]=[];
+    const [lat,lng]=pt.coordinates.split(',').map(Number);
+    groups[key].push([lng,lat]);
+  });
+
+  for(const key in groups){
+    if(groups[key].length<3) continue;
+    const points=turf.points(groups[key]);
+    let hull=turf.concave(points,{maxEdge:3,units:"kilometers"}) || turf.convex(points);
+    if(!hull) continue;
+
+    const poly=L.geoJSON(hull,{
+      pane:"polygonsPane",
+      style:{color:getCategoryColor(key),weight:2,fillOpacity:0.15}
+    }).addTo(map);
+
+    polygons.push(poly);
+  }
+}
+
+map.on("zoomend moveend", redrawAll);
+
+// ---------- LEGEND ----------
+function updateLegend(){
+  const legend=document.getElementById("legend");
+  legend.innerHTML="";
+
+  const mode=document.getElementById("colorMode").value;
+  const keys=[...new Set(allData.map(pt=>getCategoryKey(pt)))];
+
+  legend.innerHTML+=`<b>${mode.toUpperCase()} Legend</b>`;
+
+  const btns=document.createElement("div");
+  btns.className="legend-buttons";
+  btns.innerHTML=`<button onclick="showAll()">Show All</button>
+                  <button onclick="hideAll()">Hide All</button>`;
+  legend.appendChild(btns);
+
+  keys.forEach(key=>{
+    if(activeCategories[key]===undefined) activeCategories[key]=true;
+    const div=document.createElement("div");
+    div.className="legend-item"+(activeCategories[key]?"":" off");
+
+    const left=document.createElement("div");
+    left.className="legend-left";
+    left.innerHTML=`<div class="legend-color" style="background:${getCategoryColor(key)}"></div>${key}`;
+    left.onclick=()=>{
+      activeCategories[key]=!activeCategories[key];
+      updateLegend(); redrawAll();
+    };
+
+    const onlyBtn=document.createElement("button");
+    onlyBtn.textContent="Only";
+    onlyBtn.onclick=()=>{
+      keys.forEach(k=>activeCategories[k]=false);
+      activeCategories[key]=true;
+      updateLegend(); redrawAll();
+    };
+
+    div.appendChild(left);
+    div.appendChild(onlyBtn);
+    legend.appendChild(div);
+  });
+}
+
+function showAll(){
+  Object.keys(activeCategories).forEach(k=>activeCategories[k]=true);
+  updateLegend(); redrawAll();
+}
+
+function hideAll(){
+  Object.keys(activeCategories).forEach(k=>activeCategories[k]=false);
+  updateLegend(); redrawAll();
+}
+
+updateLegend();
+</script>
+</body>
+</html>
